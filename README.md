@@ -1,9 +1,10 @@
 # AutoInsight
+
 Minor1
 
 An AI-powered web app that automatically performs exploratory data analysis (EDA) on uploaded datasets.
 
-This is our Minor Project for CSE Semester V. The goal is to build a no-code tool that turns raw CSV/Excel files into smart insights and visualizations instantly.
+The goal is to build a no-code tool that turns raw CSV/Excel files into smart insights and visualizations instantly.📈
 
 ---
 
@@ -16,7 +17,7 @@ This is our Minor Project for CSE Semester V. The goal is to build a no-code too
 
 ---
 
-### Tech Stack
+### Tech Stack📚
 
 *   **Framework:** Streamlit
 *   **Backend & Analysis:** Python, Pandas, NumPy
@@ -24,4 +25,4 @@ This is our Minor Project for CSE Semester V. The goal is to build a no-code too
 
 ---
 
-*(This project is under active development.)*
+*(This project is under active development.)* 🚧 
