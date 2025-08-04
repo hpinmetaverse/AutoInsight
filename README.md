@@ -1,0 +1,2 @@
+# AutoInsight
+Minor1
