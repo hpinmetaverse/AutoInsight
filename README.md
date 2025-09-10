@@ -19,8 +19,8 @@ The goal is to build a no-code tool that turns raw CSV/Excel files into smart in
 
 ### Tech Stack📚
 
-*   **Framework:** Streamlit
-*   **Backend & Analysis:** Python, Pandas, NumPy
+*   **Framework:** React,Streamlit
+*   **Backend & Analysis:** Python, Pandas, NumPy,ExpressJS,NodeJS
 *   **Visualization:** Plotly, Matplotlib
 
 ---
