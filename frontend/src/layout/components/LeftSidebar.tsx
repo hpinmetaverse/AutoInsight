@@ -2,7 +2,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { SignedIn } from "@clerk/clerk-react";
-import { Album, HomeIcon, Library, MessageCircle } from "lucide-react";
+import { History, HomeIcon, Library, MessageCircle } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -35,8 +35,8 @@ const LeftSidebar = () => {
                 })
               )}
             >
-              <MessageCircle className="mr-2 size-5" />
-              <span className="hidden md:inline">Messages</span>
+              <History className="mr-2 size-5" />
+              <span className="hidden md:inline">History</span>
             </Link>
           </SignedIn>
         </div>
