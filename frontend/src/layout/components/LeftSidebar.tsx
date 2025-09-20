@@ -2,7 +2,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { SignedIn } from "@clerk/clerk-react";
-import { History, HomeIcon, Library, MessageCircle } from "lucide-react";
+import { History, HomeIcon, Library } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
