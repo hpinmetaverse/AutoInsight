@@ -1,7 +1,4 @@
 import Topbar from "@/components/Topbar";
-
-import { useEffect } from "react";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const HomePage = () => {

@@ -2,7 +2,13 @@ import { buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { SignedIn } from "@clerk/clerk-react";
-import { History, HomeIcon, Library } from "lucide-react";
+import {
+  Binary,
+  History,
+  HomeIcon,
+  Library,
+  TypeOutlineIcon,
+} from "lucide-react";
 
 import { Link } from "react-router-dom";
 
@@ -59,6 +65,7 @@ const LeftSidebar = () => {
               })
             )}
           >
+            <Binary className="mr-2 size-5" />
             <span className="hidden md:inline">Numerical</span>
           </Link>
           <Link
@@ -70,6 +77,7 @@ const LeftSidebar = () => {
               })
             )}
           >
+            <TypeOutlineIcon className="mr-2 size-5" />
             <span className="hidden md:inline">Non - Numerical</span>
           </Link>
         </ScrollArea>
