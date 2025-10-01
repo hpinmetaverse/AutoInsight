@@ -28,7 +28,6 @@ const MainLayout = () => {
           <Outlet />
         </ResizablePanel>
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
-        {/*Right Sidebar */}
       </ResizablePanelGroup>
     </div>
   );

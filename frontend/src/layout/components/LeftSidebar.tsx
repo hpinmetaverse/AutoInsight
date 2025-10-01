@@ -26,7 +26,7 @@ const LeftSidebar = () => {
           </Link>
           <SignedIn>
             <Link
-              to={"/chat"}
+              to={"/history"}
               className={cn(
                 buttonVariants({
                   variant: "ghost",
@@ -49,7 +49,30 @@ const LeftSidebar = () => {
             <span className="hidden md:inline"> Integrations</span>
           </div>
         </div>
-        <ScrollArea className="h-[calc(100vh-300px)]"></ScrollArea>
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          <Link
+            to={"/num"}
+            className={cn(
+              buttonVariants({
+                variant: "ghost",
+                className: "w-full justify-start text-white hover:bg-zinc-800",
+              })
+            )}
+          >
+            <span className="hidden md:inline">Numerical</span>
+          </Link>
+          <Link
+            to={"/nnum"}
+            className={cn(
+              buttonVariants({
+                variant: "ghost",
+                className: "w-full justify-start text-white hover:bg-zinc-800",
+              })
+            )}
+          >
+            <span className="hidden md:inline">Non - Numerical</span>
+          </Link>
+        </ScrollArea>
       </div>
     </div>
   );
