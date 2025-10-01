@@ -7,6 +7,7 @@ import MainLayout from "./layout/MainLayout";
 import Numerical from "./pages/numerical/Numerical";
 import Nnumerical from "./pages/nnumerical/Nnumerical";
 import Chathistory from "./pages/history/Chathistory";
+import NotFoundPage from "./pages/404/NotFoundPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/history" element={<Chathistory />} />
           <Route path="/num" element={<Numerical />} />
           <Route path="/nnum" element={<Nnumerical />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </>
