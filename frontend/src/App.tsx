@@ -26,13 +26,14 @@ export default function App() {
         <Route path="/auth-callback" element={<AuthCallbackPage />} />
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/history"
-            element={isSignedIn ? <Chathistory /> : <Navigate to="/" />}
-          />
-          <Route path="/num" element={<Numerical />} />
-          <Route path="/nnum" element={<Nnumerical />} />
         </Route>
+        <Route
+          path="/history"
+          element={isSignedIn ? <Chathistory /> : <Navigate to="/" />}
+        />
+
+        <Route path="/num" element={<Numerical />} />
+        <Route path="/nnum" element={<Nnumerical />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
