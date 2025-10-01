@@ -1,8 +1,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { SignedIn } from "@clerk/clerk-react";
-import { History, HomeIcon, Plus, Trash2 } from "lucide-react";
+import { HomeIcon, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const LeftSidebar = () => {
@@ -23,21 +22,6 @@ const LeftSidebar = () => {
             <HomeIcon className="mr-2 size-5" />
             <span className="hidden lg:inline">Home</span>
           </Link>
-          <SignedIn>
-            <Link
-              to={"/history"}
-              className={cn(
-                buttonVariants({
-                  variant: "ghost",
-                  className:
-                    "w-full justify-start text-white hover:bg-zinc-800",
-                })
-              )}
-            >
-              <History className="mr-2 size-5" />
-              <span className="hidden md:inline">History</span>
-            </Link>
-          </SignedIn>
         </div>
       </div>
 
