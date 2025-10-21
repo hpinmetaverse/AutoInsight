@@ -2,44 +2,69 @@ import { useState, useRef, type ChangeEvent } from "react";
 
 interface PredictResponse {
   sentiment: string;
-  score: number;
+  score: number; 
+}
+
+type TabType = 'num' | 'nnum';
+
+interface TabState {
+  text: string;
+  fileContent: string;
+  fileName: string;
+  result: string;
 }
 
 const Chat: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"num" | "nnum">("num");
+  const [activeTab, setActiveTab] = useState<TabType>('num');
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
-  // Common states per tab
-  const [numText, setNumText] = useState("");
-  const [numFileContent, setNumFileContent] = useState("");
-  const [numFileName, setNumFileName] = useState("");
+  // Separate state for each tab
+  const [tabStates, setTabStates] = useState<Record<TabType, TabState>>({
+    num: {
+      text: "",
+      fileContent: "",
+      fileName: "",
+      result: ""
+    },
+    nnum: {
+      text: "",
+      fileContent: "",
+      fileName: "",
+      result: ""
+    }
+  });
 
-  const [nnumText, setNnumText] = useState("");
-  const [nnumFileContent, setNnumFileContent] = useState("");
-  const [nnumFileName, setNnumFileName] = useState("");
+  const fileInputRefs = {
+    num: useRef<HTMLInputElement | null>(null),
+    nnum: useRef<HTMLInputElement | null>(null)
+  };
 
-  const [result, setResult] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // Get current tab state
+  const currentState = tabStates[activeTab];
 
-  const numFileRef = useRef<HTMLInputElement | null>(null);
-  const nnumFileRef = useRef<HTMLInputElement | null>(null);
+  // Update current tab state
+  const updateCurrentTabState = (updates: Partial<TabState>) => {
+    setTabStates(prev => ({
+      ...prev,
+      [activeTab]: { ...prev[activeTab], ...updates }
+    }));
+  };
 
   // Analyze text or file content
   const analyze = async () => {
-    const isNum = activeTab === "num";
-    const inputText = isNum
-      ? numText.trim() || numFileContent
-      : nnumText.trim() || nnumFileContent;
+    const inputText = currentState.text.trim() ? currentState.text : currentState.fileContent;
 
     if (!inputText) {
-      setResult("Please enter some text or upload a file to analyze.");
+      updateCurrentTabState({ result: "Please enter some text or upload a file to analyze." });
       return;
     }
 
     setIsAnalyzing(true);
-    setResult("");
+    updateCurrentTabState({ result: "" });
 
     try {
-      const apiUrl = isNum
+      // Use different API based on active tab
+      const apiUrl = activeTab === 'num' 
         ? "http://localhost:5001/api/predict"
         : "http://localhost:5001/api/predictate";
 
@@ -52,111 +77,62 @@ const Chat: React.FC = () => {
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
       const data: PredictResponse = await res.json();
-      setResult(`${data.sentiment} (${data.score.toFixed(2)})`);
+      updateCurrentTabState({ result: `${data.sentiment} (${data.score.toFixed(2)})` });
     } catch (error) {
       console.error("Error:", error);
-      setResult("Error: Failed to analyze text. Please try again.");
+      updateCurrentTabState({ result: "Error: Failed to analyze text. Please try again." });
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = (
-    event: ChangeEvent<HTMLInputElement>,
-    type: "num" | "nnum"
-  ) => {
+  // Handle file upload for current tab
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    updateCurrentTabState({ 
+      fileName: file.name,
+      text: "" // Clear manual text if a file is uploaded
+    });
+
     if (!file.type.startsWith("text/") && !file.name.endsWith(".txt")) {
-      setResult("Error: Please upload a text file (.txt)");
+      updateCurrentTabState({ result: "Error: Please upload a text file (.txt)" });
       return;
     }
 
     if (file.size > 1024 * 1024) {
-      setResult("Error: File size must be less than 1MB");
+      updateCurrentTabState({ result: "Error: File size must be less than 1MB" });
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target?.result as string;
-
-      if (type === "num") {
-        setNumFileContent(content);
-        setNumFileName(file.name);
-        setNumText("");
-      } else {
-        setNnumFileContent(content);
-        setNnumFileName(file.name);
-        setNnumText("");
-      }
-
-      setResult("File loaded successfully! Click 'Analyze' to get sentiment.");
+      updateCurrentTabState({ 
+        fileContent: e.target.result as string,
+        result: "File loaded successfully! Click 'Analyze' to get sentiment."
+      });
     };
-    reader.onerror = () => setResult("Error: Failed to read file");
+    reader.onerror = () => {
+      updateCurrentTabState({ result: "Error: Failed to read file" });
+    };
     reader.readAsText(file);
   };
 
-  // Clear all inputs
+  // Clear all inputs and results for current tab
   const clearAll = () => {
-    if (activeTab === "num") {
-      setNumText("");
-      setNumFileContent("");
-      setNumFileName("");
-      if (numFileRef.current) numFileRef.current.value = "";
-    } else {
-      setNnumText("");
-      setNnumFileContent("");
-      setNnumFileName("");
-      if (nnumFileRef.current) nnumFileRef.current.value = "";
+    updateCurrentTabState({
+      text: "",
+      fileContent: "",
+      fileName: "",
+      result: ""
+    });
+    if (fileInputRefs[activeTab].current) {
+      fileInputRefs[activeTab].current.value = "";
     }
-    setResult("");
   };
 
-  const isError = result.toLowerCase().includes("error");
-
-  // Helper for rendering tab content
-  const renderTabContent = (type: "num" | "nnum") => {
-    const text = type === "num" ? numText : nnumText;
-    const fileName = type === "num" ? numFileName : nnumFileName;
-    const setText = type === "num" ? setNumText : setNnumText;
-    const fileRef = type === "num" ? numFileRef : nnumFileRef;
-
-    return (
-      <>
-        {/* File Upload */}
-        <div className="mb-4 p-4 border-2 border-dashed rounded bg-white text-center">
-          <h3 className="font-medium mb-2">Upload Text File</h3>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".txt,text/*"
-            onChange={(e) => handleFileUpload(e, type)}
-            className="border rounded px-2 py-1 w-full"
-          />
-          {fileName && <p className="text-green-600 mt-1">📁 {fileName}</p>}
-        </div>
-
-        {/* Manual Text Input */}
-        <div className="mb-4 flex-1 flex flex-col">
-          <h3 className="font-medium mb-1">Or Enter Text Manually</h3>
-          <textarea
-            maxLength={1000}
-            rows={6}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text to analyze or upload a file above..."
-            className="w-full flex-1 border-2 border-gray-300 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Character count: {text.length} / 1000
-          </p>
-        </div>
-      </>
-    );
-  };
+  const isError = currentState.result.toLowerCase().includes("error");
 
   return (
     <div className="flex flex-col h-full p-4 overflow-auto bg-gray-50 text-gray-900">
@@ -164,53 +140,87 @@ const Chat: React.FC = () => {
         Sentiment Analyzer
       </h1>
 
-      {/* Tabs */}
-      <div className="flex justify-center gap-2 mb-4">
+      {/* Tab Navigation */}
+      <div className="flex mb-4 border-b border-gray-300">
         <button
-          className={`px-4 py-2 rounded font-semibold ${
-            activeTab === "num"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          className={`flex-1 py-2 font-semibold rounded-tl ${
+            activeTab === 'num' 
+              ? 'bg-blue-600 text-white border-b-2 border-blue-600' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
-          onClick={() => setActiveTab("num")}
+          onClick={() => setActiveTab('num')}
         >
-          Num
+          Num API
         </button>
         <button
-          className={`px-4 py-2 rounded font-semibold ${
-            activeTab === "nnum"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          className={`flex-1 py-2 font-semibold rounded-tr ${
+            activeTab === 'nnum' 
+              ? 'bg-green-600 text-white border-b-2 border-green-600' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
-          onClick={() => setActiveTab("nnum")}
+          onClick={() => setActiveTab('nnum')}
         >
-          Nnum
+          Nnum API
         </button>
       </div>
 
-      {/* Active Tab Content */}
-      {renderTabContent(activeTab)}
+      {/* API Info */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+        <p className="text-sm text-blue-700">
+          <strong>Current API:</strong>{' '}
+          {activeTab === 'num' 
+            ? 'http://localhost:5001/api/predict'
+            : 'http://localhost:5001/api/predictate'
+          }
+        </p>
+      </div>
+
+      {/* File Upload */}
+      <div className="mb-4 p-4 border-2 border-dashed rounded bg-white text-center">
+        <h3 className="font-medium mb-2">Upload Text File</h3>
+        <input
+          ref={fileInputRefs[activeTab]}
+          type="file"
+          accept=".txt,text/*"
+          onChange={handleFileUpload}
+          className="border rounded px-2 py-1 w-full"
+        />
+        {currentState.fileName && (
+          <p className="text-green-600 mt-1">📁 {currentState.fileName}</p>
+        )}
+      </div>
+
+      {/* Manual Text Input */}
+      <div className="mb-4 flex-1 flex flex-col">
+        <h3 className="font-medium mb-1">Or Enter Text Manually</h3>
+        <textarea
+          maxLength={1000}
+          rows={6}
+          value={currentState.text}
+          onChange={(e) => updateCurrentTabState({ text: e.target.value })}
+          placeholder="Enter text to analyze or upload a file above..."
+          className="w-full flex-1 border-2 border-gray-300 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          Character count: {currentState.text.length} / 1000
+        </p>
+      </div>
 
       {/* Buttons */}
       <div className="flex gap-2 mb-4">
         <button
           onClick={analyze}
-          disabled={
-            isAnalyzing ||
-            (!numText.trim() && !numFileContent && activeTab === "num") ||
-            (!nnumText.trim() && !nnumFileContent && activeTab === "nnum")
-          }
+          disabled={isAnalyzing || (!currentState.text.trim() && !currentState.fileContent)}
           className={`flex-1 py-2 rounded font-semibold text-white ${
-            isAnalyzing ||
-            (!numText.trim() && !numFileContent && activeTab === "num") ||
-            (!nnumText.trim() && !nnumFileContent && activeTab === "nnum")
+            isAnalyzing || (!currentState.text.trim() && !currentState.fileContent)
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
+              : activeTab === 'num' 
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-green-600 hover:bg-green-700"
           }`}
         >
           {isAnalyzing ? "🔄 Analyzing..." : "🔍 Analyze"}
         </button>
-
         <button
           onClick={clearAll}
           className="py-2 px-4 rounded font-semibold text-white bg-gray-600 hover:bg-gray-700"
@@ -220,7 +230,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Result */}
-      {result && (
+      {currentState.result && (
         <div
           className={`p-3 rounded font-bold mb-4 text-center ${
             isError
@@ -228,7 +238,7 @@ const Chat: React.FC = () => {
               : "bg-green-100 text-green-700 border border-green-300"
           }`}
         >
-          {result}
+          {currentState.result}
         </div>
       )}
 
@@ -237,19 +247,19 @@ const Chat: React.FC = () => {
         <h4 className="font-medium mb-1">📋 How to Use:</h4>
         <ul className="list-disc list-inside space-y-1">
           <li>
-            <strong>Select Tab:</strong> Choose between <code>Num</code> or{" "}
-            <code>Nnum</code> for different APIs.
+            <strong>Select API:</strong> Choose between Num and Nnum APIs using the tabs
           </li>
           <li>
-            <strong>Upload a file:</strong> Click "Choose File" and select a
-            .txt file.
+            <strong>Upload a file:</strong> Click "Choose File" and select a .txt file
           </li>
           <li>
-            <strong>Manual input:</strong> Type or paste text in the textarea.
+            <strong>Manual input:</strong> Type or paste text in the textarea
           </li>
           <li>
-            <strong>Analyze:</strong> Click "Analyze" to get the sentiment
-            score.
+            <strong>Analyze:</strong> Click "Analyze" to get the sentiment score
+          </li>
+          <li>
+            <strong>Supported files:</strong> .txt files only, max 1MB
           </li>
         </ul>
       </div>

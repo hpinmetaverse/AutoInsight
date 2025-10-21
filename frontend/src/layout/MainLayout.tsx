@@ -4,7 +4,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Outlet } from "react-router-dom";
-import LeftSidebar from "./components/LeftSidebar";
 
 const MainLayout = () => {
   const isMobile = false;
