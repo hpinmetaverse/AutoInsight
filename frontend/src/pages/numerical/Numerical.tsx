@@ -4,7 +4,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import LeftSidebar from "./components/LeftSidebar";
-import Chat from "./components/Chat";
+import Chat  from "./components/Chat";
 
 const MainLayout = () => {
   const isMobile = false;

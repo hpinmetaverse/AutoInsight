@@ -5,7 +5,7 @@ import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import MainLayout from "./layout/MainLayout";
 import Numerical from "./pages/numerical/Numerical";
-import Nnumerical from "./pages/nnumerical/Nnumerical";
+
 import NotFoundPage from "./pages/404/NotFoundPage";
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
         </Route>
 
         <Route path="/num" element={<Numerical />} />
-        <Route path="/nnum" element={<Nnumerical />} />
+      
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
