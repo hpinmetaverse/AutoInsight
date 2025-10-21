@@ -15,13 +15,7 @@ const MainLayout = () => {
         className="flex flex-1 h-full overflow-hidden p-2"
       >
         {/*Left Sidebar */}
-        <ResizablePanel
-          defaultSize={isMobile ? 0 : 14}
-          minSize={isMobile ? 0 : 14}
-          maxSize={18}
-        >
-          <LeftSidebar />
-        </ResizablePanel>
+       
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
         {/*Main Content */}
         <ResizablePanel defaultSize={isMobile ? 80 : 60}>
