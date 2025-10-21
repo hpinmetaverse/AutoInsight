@@ -7,7 +7,7 @@ import { Outlet } from "react-router-dom";
 import LeftSidebar from "./components/LeftSidebar";
 import Chat from "./components/Chat";
 
-const Numerical = () => {
+const MainLayout = () => {
   const isMobile = false;
 
   return (
@@ -27,20 +27,21 @@ const Numerical = () => {
 
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
 
-        {/* Main Content */}
-        <ResizablePanel defaultSize={isMobile ? 80 : 50}>
-          <Outlet />
+        {/* Chat Panel */}
+        <ResizablePanel
+          defaultSize={isMobile ? 0 : 20} // adjust width
+          minSize={isMobile ? 0 : 15}
+      
+        >
+          <Chat />
         </ResizablePanel>
 
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
 
-        {/* Chat Panel */}
-        <ResizablePanel defaultSize={isMobile ? 20 : 20} minSize={20} maxSize={30}>
-          <Chat />
-        </ResizablePanel>
+       
       </ResizablePanelGroup>
     </div>
   );
 };
 
-export default Numerical;
+export default MainLayout;

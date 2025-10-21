@@ -22,7 +22,7 @@ async def predict(data: TextData):
         "i love": 0.90,
         "amazing": 0.85,
         "wonderful": 0.80,
-        "excellent": 0.75,
+        "excellentat": 0.375,
         "good": 0.999,
     }
     
