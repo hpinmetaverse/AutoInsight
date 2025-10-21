@@ -6,7 +6,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.route.js";
-import adminRoutes from "./routes/admin.route.js";
+import predictRoutes from "./routes/predict.route.js";
+
 
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
@@ -17,8 +18,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(
   cors({
-    origin: "http://localhost:3000",
-    credentials: true,
+    origin: ["http://localhost:5173", "http://localhost:3000", "http://localhost:3001"], // allow both Vite and React dev servers
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true
   })
 );
 app.use(express.json());
@@ -33,7 +36,9 @@ app.use(
 );
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
+
+app.use("/api", predictRoutes);
+
 // error handler
 app.use((err, req, res, next) => {
   res.status(500).json({

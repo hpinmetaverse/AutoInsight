@@ -5,16 +5,18 @@ import {
 } from "@/components/ui/resizable";
 import { Outlet } from "react-router-dom";
 import LeftSidebar from "./components/LeftSidebar";
+import Chat from "./components/Chat";
 
 const Numerical = () => {
   const isMobile = false;
+
   return (
     <div className="h-screen bg-black text-white flex flex-col">
       <ResizablePanelGroup
         direction="horizontal"
         className="flex flex-1 h-full overflow-hidden p-2"
       >
-        {/*Left Sidebar */}
+        {/* Left Sidebar */}
         <ResizablePanel
           defaultSize={isMobile ? 0 : 14}
           minSize={isMobile ? 0 : 14}
@@ -22,12 +24,20 @@ const Numerical = () => {
         >
           <LeftSidebar />
         </ResizablePanel>
+
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
-        {/*Main Content */}
-        <ResizablePanel defaultSize={isMobile ? 80 : 60}>
+
+        {/* Main Content */}
+        <ResizablePanel defaultSize={isMobile ? 80 : 50}>
           <Outlet />
         </ResizablePanel>
+
         <ResizableHandle className="transition-colors w-2 rounded-lg bg-black" />
+
+        {/* Chat Panel */}
+        <ResizablePanel defaultSize={isMobile ? 20 : 20} minSize={20} maxSize={30}>
+          <Chat />
+        </ResizablePanel>
       </ResizablePanelGroup>
     </div>
   );
