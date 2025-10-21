@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
 
-function Chat() {
-  const [text, setText] = useState("");
-  const [fileContent, setFileContent] = useState("");
-  const [fileName, setFileName] = useState("");
-  const [result, setResult] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+interface PredictResponse {
+  sentiment: string;
+  score: number; 
+}
 
+const Chat: React.FC = () => {
+  const [text, setText] = useState<string>("");
+  const [fileContent, setFileContent] = useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
+  const [result, setResult] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Analyze text or file content
   const analyze = async () => {
-    const inputText = fileContent || text;
+    const inputText = text.trim() ? text : fileContent;
 
-    if (!inputText.trim()) {
+    if (!inputText) {
       setResult("Please enter some text or upload a file to analyze.");
       return;
     }
@@ -27,7 +35,7 @@ function Chat() {
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-      const data = await res.json();
+      const data: PredictResponse = await res.json();
       setResult(`${data.sentiment} (${data.score.toFixed(2)})`);
     } catch (error) {
       console.error("Error:", error);
@@ -37,11 +45,13 @@ function Chat() {
     }
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+  // Handle file upload
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     setFileName(file.name);
+    setText(""); // Clear manual text if a file is uploaded
 
     if (!file.type.startsWith("text/") && !file.name.endsWith(".txt")) {
       setResult("Error: Please upload a text file (.txt)");
@@ -55,7 +65,7 @@ function Chat() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      setFileContent(e.target.result);
+      setFileContent(e.target.result as string);
       setResult("File loaded successfully! Click 'Analyze' to get sentiment.");
     };
     reader.onerror = () => {
@@ -64,14 +74,16 @@ function Chat() {
     reader.readAsText(file);
   };
 
+  // Clear all inputs and results
   const clearAll = () => {
     setText("");
     setFileContent("");
     setFileName("");
     setResult("");
-    const fileInput = document.getElementById("fileInput");
-    if (fileInput) fileInput.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const isError = result.toLowerCase().includes("error");
 
   return (
     <div className="flex flex-col h-full p-4 overflow-auto bg-gray-50 text-gray-900">
@@ -83,6 +95,7 @@ function Chat() {
       <div className="mb-4 p-4 border-2 border-dashed rounded bg-white text-center">
         <h3 className="font-medium mb-2">Upload Text File</h3>
         <input
+          ref={fileInputRef}
           id="fileInput"
           type="file"
           accept=".txt,text/*"
@@ -96,7 +109,8 @@ function Chat() {
       <div className="mb-4 flex-1 flex flex-col">
         <h3 className="font-medium mb-1">Or Enter Text Manually</h3>
         <textarea
-          rows="6"
+          maxLength={1000}
+          rows={6}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter text to analyze or upload a file above..."
@@ -132,7 +146,7 @@ function Chat() {
       {result && (
         <div
           className={`p-3 rounded font-bold mb-4 text-center ${
-            result.startsWith("Error")
+            isError
               ? "bg-red-100 text-red-700 border border-red-300"
               : "bg-green-100 text-green-700 border border-green-300"
           }`}
@@ -162,6 +176,6 @@ function Chat() {
       </div>
     </div>
   );
-}
+};
 
 export default Chat;
