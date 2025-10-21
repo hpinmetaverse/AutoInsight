@@ -3,7 +3,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Outlet } from "react-router-dom";
 import LeftSidebar from "./components/LeftSidebar";
 import Chat from "./components/Chat";
 
