@@ -75,7 +75,7 @@ const Chat = () => {
   };
 
   const getModeColor = (mode: string) => {
-    return mode === "Num" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-green-100 text-green-800 border-green-200";
+    return mode === "Num" ? " bg-gradient-to-b from-zinc-500 to-zinc-700 text-gray-300 " : " bg-gradient-to-b from-zinc-500 to-zinc-700 text-gray-300 ";
   };
 
   return (
@@ -94,22 +94,22 @@ const Chat = () => {
         <form onSubmit={handleSend} className="space-y-4">
           {/* File Preview */}
           {filePreview && (
-            <div className="flex items-center justify-between p-3 bg-gray-400 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-b from-zinc-600 to-zinc-800 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <FileText className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{filePreview}</p>
-                  <p className="text-xs text-gray-700">Ready to analyze</p>
+                  <p className="text-sm font-medium text-gray-300">{filePreview}</p>
+                  <p className="text-xs text-white">Ready to analyze</p>
                 </div>
               </div>
               <button
                 type="button"
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-1  rounded-full transition-colors"
                 onClick={removeFile}
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-gray-200" />
               </button>
             </div>
           )}
@@ -219,7 +219,7 @@ const Chat = () => {
                       className="rounded-full px-3 hover:shadow-md transition-all duration-200 cursor-pointer" 
                       disabled={(!filePreview && !message.trim()) || isUploading}
                     >
-                      <ArrowUpIcon className="w-4 h-4 " />
+                      <ArrowUpIcon className="w-4 h-4 cursor-pointer" />
                     </Button>
                   </div>
                 </div>
