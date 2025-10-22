@@ -8,7 +8,6 @@ import userRoutes from "./routes/user.route.js";
 import authRoutes from "./routes/auth.route.js";
 import predictRoutes from "./routes/predict.route.js";
 
-
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
 dotenv.config();
@@ -37,6 +36,7 @@ app.use(
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", predictRoutes);
+
 
 // error handler
 app.use((err, req, res, next) => {
