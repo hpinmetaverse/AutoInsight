@@ -15,7 +15,7 @@ async def predict(data: TextData):
     # Custom sentiment mapping for specific words
     custom_sentiments = {
         "hate you": -0.990,
-        "i hate": -0.85,
+        "i hate": -0.95, 
         "terrible": -0.80,
         "awful": -0.75,
         "love you": 0.95,
