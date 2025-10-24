@@ -17,6 +17,9 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+
+
+
 const Chat = () => {
   const [mode, setMode] = useState<"Num" | "Non-Num">("Num");
   const [filePreview, setFilePreview] = useState<string | null>(null);
