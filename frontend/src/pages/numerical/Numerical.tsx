@@ -5,7 +5,6 @@ import {
 } from "@/components/ui/resizable";
 import LeftSidebar from "./components/LeftSidebar";
 import Chat  from "./components/Chat";
-import Topbar from "@/components/Topbar";
 
 const MainLayout = () => {
   const isMobile = false;
@@ -13,7 +12,7 @@ const MainLayout = () => {
   return (
 
     <div className="h-screen bg-black text-white flex flex-col">
-          <Topbar/>
+ 
       <ResizablePanelGroup
         direction="horizontal"
         className="flex flex-1 h-full overflow-hidden p-2"
