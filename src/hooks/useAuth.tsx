@@ -43,8 +43,9 @@ export const useAuth = () => {
       }
     });
     return { error };
+    
   };
-
+  
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
