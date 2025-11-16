@@ -15,6 +15,9 @@
 #   "python-multipart",
 #   "openpyxl",
 #   "lxml",
+#   "transformers",
+#   "accelerate",
+#   "torch",
 # ]
 # ///
 
@@ -30,6 +33,8 @@ from io import BytesIO
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from transformers import pipeline
+import torch
 
 app = FastAPI()
 
@@ -151,52 +156,33 @@ def visualize_data(df, corr_matrix, outliers, categorical, numerical):
 
     return plots
 
-# Function to generate a simple textual story
-def generate_story(df, summary_stats, missing_values, corr_matrix, outliers, categorical, numerical):
-    story = f"This dataset contains {len(df)} rows and {len(df.columns)} columns.\n\n"
-    
+# Function to generate a summary using GPT-2
+def generate_summary(df, summary_stats, missing_values, corr_matrix, outliers, categorical, numerical):
+    # Prepare prompt
+    prompt = f"Explain this dataset in simple terms for a layman: The dataset has {len(df)} rows and {len(df.columns)} columns. "
     if categorical:
-        story += f"It has {len(categorical)} categorical columns: {', '.join(categorical)}.\n\n"
-    else:
-        story += "There are no categorical columns.\n\n"
-    
+        prompt += f"Categorical columns: {', '.join(categorical)}. "
     if numerical:
-        story += f"It has {len(numerical)} numerical columns: {', '.join(numerical)}.\n\n"
+        prompt += f"Numerical columns: {', '.join(numerical)}. "
         if not summary_stats.empty:
-            story += "Summary statistics for numerical columns:\n"
-            for col in numerical:
-                if col in summary_stats.columns:
-                    mean = summary_stats.loc['mean', col]
-                    std = summary_stats.loc['std', col]
-                    story += f"- {col}: mean {mean:.2f}, std {std:.2f}\n"
-            story += "\n"
-    else:
-        story += "There are no numerical columns.\n\n"
-    
-    missing_count = sum(missing_values.values)
-    if missing_count > 0:
-        story += f"There are {missing_count} missing values in total.\n\n"
-    else:
-        story += "There are no missing values.\n\n"
-    
-    if not corr_matrix.empty and len(corr_matrix) > 1:
-        story += "The correlation matrix shows relationships between numerical variables.\n"
-        # Find highest correlation
-        corr_unstack = corr_matrix.where(np.triu(np.ones_like(corr_matrix), k=1).astype(bool)).stack()
-        if not corr_unstack.empty:
-            max_corr = corr_unstack.abs().max()
-            max_pair = corr_unstack.abs().idxmax()
-            story += f"The highest correlation ({max_corr:.2f}) is between {max_pair[0]} and {max_pair[1]}.\n\n"
-    
-    outlier_count = sum(outliers.values()) if outliers else 0
-    if outlier_count > 0:
-        story += f"There are {outlier_count} outliers detected in the numerical columns.\n\n"
-    
-    story += "This analysis provides insights into the dataset's structure and key characteristics."
-    
-    return story
+            prompt += f"Summary stats for numerical: {summary_stats.to_string()}. "
+    prompt += f"Total missing values: {sum(missing_values.values)}. "
+    if not corr_matrix.empty:
+        prompt += f"Correlations: {corr_matrix.to_string()}. "
+    if outliers:
+        prompt += f"Outliers count: {sum(outliers.values())}. "
+    prompt += "Describe what this dataset represents, key insights, and if there's a target column. Explain in paragraphs."
 
-@app.post("/analyze", response_class=HTMLResponse)
+    # Use GPT-2 for generation
+    generator = pipeline('text-generation', model='gpt2', device=0 if torch.cuda.is_available() else -1)
+    generated = generator(prompt, max_new_tokens=256, num_return_sequences=1, truncation=True)
+    summary = generated[0]['generated_text']
+    # Remove the prompt from the beginning if present
+    if summary.startswith(prompt):
+        summary = summary[len(prompt):].strip()
+    return summary
+
+@app.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
     if not file.filename.endswith(('.csv', '.xlsx')):
         raise HTTPException(status_code=400, detail="File must be CSV or XLSX")
@@ -217,56 +203,25 @@ async def analyze_file(file: UploadFile = File(...)):
 
     plots = visualize_data(df, corr_matrix, outliers, categorical, numerical)
 
-    story = generate_story(df, summary_stats, pd.Series(analysis['missing_values']), corr_matrix, outliers, categorical, numerical)
+    summary = generate_summary(df, summary_stats, pd.Series(analysis['missing_values']), corr_matrix, outliers, categorical, numerical)
 
-    # Build HTML response
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AutoInsight Analysis</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            h1, h2 {{ color: #333; }}
-            table {{ border-collapse: collapse; width: 100%; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-            th {{ background-color: #f2f2f2; }}
-            img {{ max-width: 100%; height: auto; }}
-        </style>
-    </head>
-    <body>
-        <h1>AutoInsight Tool - Data Analysis Report</h1>
-        <h2>Dataset Preview</h2>
-        {df.head().to_html()}
+    response = {
+        "dataset_preview": df.head().to_dict(orient='records'),
+        "column_types": {
+            "categorical": categorical,
+            "numerical": numerical
+        },
+        "analysis": {
+            "summary_stats": summary_stats.to_dict() if not summary_stats.empty else {},
+            "missing_values": analysis['missing_values'],
+            "correlation_matrix": corr_matrix.to_dict() if not corr_matrix.empty else {},
+            "outliers": outliers
+        },
+        "plots": plots,
+        "summary": summary
+    }
 
-        <h2>Column Types</h2>
-        <p><strong>Categorical:</strong> {', '.join(categorical) if categorical else 'None'}</p>
-        <p><strong>Numerical:</strong> {', '.join(numerical) if numerical else 'None'}</p>
-
-        {'<h2>Summary Statistics</h2>' + analysis.get('summary_stats', '') if 'summary_stats' in analysis else ''}
-
-        {''}
-
-        <h2>Missing Values</h2>
-        <pre>{json.dumps(analysis['missing_values'], indent=2)}</pre>
-
-        {'<h2>Correlation Matrix</h2>' + analysis.get('correlation_matrix', '') if 'correlation_matrix' in analysis else ''}
-
-        {'<h2>Outliers</h2><pre>' + json.dumps(outliers, indent=2) + '</pre>' if outliers else ''}
-
-        <h2>Visualizations</h2>
-        {'<h3>Correlation Matrix</h3><img src="data:image/png;base64,' + plots.get('correlation_matrix', '') + '">' if 'correlation_matrix' in plots else ''}
-        {'<h3>Outliers</h3><img src="data:image/png;base64,' + plots.get('outliers', '') + '">' if 'outliers' in plots else ''}
-        {'<h3>Histograms and Boxplots</h3>' + ''.join([f'<h4>{col}</h4><img src="data:image/png;base64,{plots[f"hist_{col}"]}"><img src="data:image/png;base64,{plots[f"box_{col}"]}">' for col in numerical[:3] if f'hist_{col}' in plots])}
-        {'<h3>Bar Plots</h3>' + ''.join([f'<h4>{col}</h4><img src="data:image/png;base64,{plots[f"bar_{col}"]}">' for col in categorical[:3] if f'bar_{col}' in plots])}
-
-        <h2>Data Story</h2>
-        <p>{story.replace('\n', '<br>')}</p>
-    </body>
-    </html>
-    """
-
-    return html
+    return response
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
