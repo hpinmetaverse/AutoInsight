@@ -160,7 +160,7 @@ const Auth = () => {
                     <Input
                       id="signin-password"
                       type={signInShowPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder="********"
                       value={signInPassword}
                       onChange={(e) => setSignInPassword(e.target.value)}
                       required
@@ -217,7 +217,7 @@ const Auth = () => {
                     <Input
                       id="signup-password"
                       type={signUpShowPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                    placeholder="********"
                       value={signUpPassword}
                       onChange={(e) => setSignUpPassword(e.target.value)} // spaces allowed
                       required

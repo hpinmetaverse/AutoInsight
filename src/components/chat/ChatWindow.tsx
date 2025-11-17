@@ -5,6 +5,8 @@ import { useChatStore } from '@/store/chatStore';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { NumericalAnalysisDisplay } from './NumericalAnalysisDisplay';
+import { CategoricalAnalysisDisplay } from './CategoricalAnalysisDisplay';
 
 export const ChatWindow = () => {
   const { messages, currentChatId, addMessage } = useChatStore();
@@ -59,6 +61,21 @@ export const ChatWindow = () => {
     return 'max-w-[700px]';
   };
 
+  const renderMessageContent = (message: any) => {
+    try {
+      const parsed = JSON.parse(message.text);
+      if (parsed.type === 'numerical_analysis') {
+        return <NumericalAnalysisDisplay data={parsed} />;
+      }
+      if (parsed.type === 'categorical_analysis') {
+        return <CategoricalAnalysisDisplay data={parsed} />;
+      }
+    } catch {
+      // Not JSON or not an analysis, render as text
+    }
+    return <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>;
+  };
+
   if (!currentChatId) {
     return (
       <div className="flex h-full items-center justify-center bg-gradient-to-b from-zinc-800 to-zinc-900 text-gray-300">
@@ -77,10 +94,7 @@ export const ChatWindow = () => {
       Your next idea is just one message away.
     </p>
 
-    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-      <Sparkles className="h-4 w-4" />
-      <span>Let’s create something remarkable</span>
-    </div>
+   
   </div>
 </div>
 
@@ -121,7 +135,7 @@ export const ChatWindow = () => {
               {/* Message Content */}
               <div className={cn(
                 "flex-1 space-y-2",
-                calculateMessageWidth(message.text)
+                message.text.includes('numerical_analysis') ? 'max-w-full' : calculateMessageWidth(message.text)
               )}>
                 <div className="flex items-center gap-3 mb-1">
                  
@@ -142,9 +156,7 @@ export const ChatWindow = () => {
                         "rounded-bl-md shadow-sm border-border/50"
                       )
                 )}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {message.text}
-                  </p>
+                  {renderMessageContent(message)}
                 </div>
               </div>
             </div>

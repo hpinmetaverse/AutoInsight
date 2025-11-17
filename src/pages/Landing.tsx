@@ -42,14 +42,14 @@ const Landing = () => {
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
             Chat with Advanced
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="bg-clip-text text-gray-400">
               {' '}AI Models
             </span>
           </h1>
           
           <p className="mb-12 text-xl text-muted-foreground">
             Experience the power of two cutting-edge AI models in one beautiful interface.
-            Choose between Anum and Aanum for your perfect conversation.
+            Choose between Num and Non-Num for your perfect conversation.
           </p>
 
           <div className="mb-16 flex  flex-wrap justify-center gap-4">

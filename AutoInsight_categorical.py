@@ -17,18 +17,18 @@
 # ]
 # ///
 
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import json
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
+import seaborn as sns   # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+import json # type: ignore
 import base64
 from io import BytesIO
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from transformers import pipeline
-import torch
+from fastapi import FastAPI, UploadFile, File, HTTPException # type: ignore
+from fastapi.responses import HTMLResponse # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from transformers import pipeline # type: ignore
+import torch # type: ignore
 
 app = FastAPI()
 
@@ -143,5 +143,8 @@ async def root():
     """
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn 
     uvicorn.run(app, host="0.0.0.0", port=8002)
+
+
+##  python3 -m uvicorn AutoInsight_categorical:app --reload --port 8002

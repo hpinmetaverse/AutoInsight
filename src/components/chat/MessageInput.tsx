@@ -26,11 +26,10 @@ export const MessageInput = () => {
   const { toast } = useToast();
 
   const handleFileUpload = async (file: File) => {
-    // Allowed file types: TXT, CSV, EXCEL
     const allowedTypes = [
-      'text/plain',  
-      'text/csv',  
-      'application/vnd.ms-excel',  
+      'text/plain',
+      'text/csv',
+      'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
 
@@ -46,7 +45,6 @@ export const MessageInput = () => {
       return;
     }
 
-    // Max file size: 5MB
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'File too large',
@@ -103,10 +101,9 @@ export const MessageInput = () => {
         try {
           fileContent = await readFileContent(uploadedFile);
           messageContent = messageContent 
-            ? `${messageContent}\n\n--- Uploaded File ---\n${fileContent}`
-            : `--- Uploaded File ---\n${fileContent}`;
-        } catch (error) {
-          console.error('Error reading file:', error);
+            ? `${messageContent}\n\n Uploaded File \n${fileContent}`
+            : `${uploadedFile.name}`;
+        } catch {
           messageContent = messageContent 
             ? `${messageContent}\n\n--- Uploaded File ---\n[File: ${uploadedFile.name} - Error reading content]`
             : `--- Uploaded File ---\n[File: ${uploadedFile.name} - Error reading content]`;
@@ -128,24 +125,54 @@ export const MessageInput = () => {
 
       const endpoint =
         selectedModel === 'Numerical'
-          ? 'http://localhost:8000/predictes'
-          : 'http://localhost:8000/predict';
+          ? 'http://localhost:8001/analyzes'
+          : 'http://localhost:8002/analyze';
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text: messageContent,
-          file_name: uploadedFile?.name,
-          file_type: uploadedFile?.type,
-          has_file: !!uploadedFile
-        }),
-      });
+      let res;
+      if (uploadedFile) {
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+        
+        res = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: messageContent,
+          }),
+        });
+      }
 
       if (!res.ok) throw new Error('Failed to fetch AI response');
 
       const data = await res.json();
-      const aiResponseText = `${data.sentiment} (Score: ${data.score})`;
+      
+      let aiResponseText: string;
+      if (selectedModel === 'Numerical') {
+        // Store the full analysis data as JSON
+        aiResponseText = JSON.stringify({
+          type: 'numerical_analysis',
+          summary: data.summary,
+          dataset_preview: data.dataset_preview,
+          column_types: data.column_types,
+          analysis: data.analysis,
+          plots: data.plots
+        });
+      } else {
+        // Store categorical analysis data as JSON
+        aiResponseText = JSON.stringify({
+          type: 'categorical_analysis',
+          summary: data.summary,
+          dataset_preview: data.dataset_preview,
+          column_types: data.column_types,
+          analysis: data.analysis,
+          plots: data.plots
+        });
+      }
 
       await supabase.from('messages').insert({
         chat_id: currentChatId,
@@ -156,7 +183,6 @@ export const MessageInput = () => {
       removeFile();
 
     } catch (error: any) {
-      console.error('Error sending message:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to send message',
@@ -195,9 +221,9 @@ export const MessageInput = () => {
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.includes('sheet') || fileType.includes('excel')) return '📊';
-    if (fileType.includes('csv') || fileType.includes('text')) return '📝';
-    return '📎';
+    if (fileType.includes('sheet') || fileType.includes('excel')) return '[S]';
+    if (fileType.includes('csv') || fileType.includes('text')) return '[T]';
+    return '[F]';
   };
 
   const formatFileSize = (bytes: number) => {
@@ -209,18 +235,17 @@ export const MessageInput = () => {
   return (
     <div className="border-t bg-gradient-to-b from-zinc-900 to-zinc-800 border-border bg-background/80 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 p-6">
       <div className="mx-auto max-w-4xl">
-        {/* Model Selector and File Upload */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-3 ">
             <Select
               value={selectedModel}
               onValueChange={(v: 'Numerical' | 'Non-Numerical') => setSelectedModel(v)}
             >
-              <SelectTrigger className="w-50 bg-gradient-to-b from-zinc-900 to-zinc-800  ">
+              <SelectTrigger className="w-50 bg-gradient-to-b from-zinc-900 to-zinc-800">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className='bg-gradient-to-b from-zinc-900 to-zinc-700'>
-                <SelectItem value="Numerical" className="flex  items-center gap-2">
+                <SelectItem value="Numerical" className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">Numerical</Badge>
                   <span className='m-2'>Model</span>
                 </SelectItem>
@@ -232,7 +257,7 @@ export const MessageInput = () => {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2  ">
+          <div className="flex items-center gap-2">
             <input
               type="file"
               ref={fileInputRef}
@@ -256,7 +281,6 @@ export const MessageInput = () => {
           </div>
         </div>
 
-        {/* Uploaded File Preview */}
         {uploadedFile && (
           <div className="mb-3 animate-in fade-in duration-200">
             <Card className="border-gray bg-gradient-to-b from-zinc-900 to-zinc-700">
@@ -268,7 +292,7 @@ export const MessageInput = () => {
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{uploadedFile.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatFileSize(uploadedFile.size)} • {uploadedFile.type || 'Unknown type'}
+                        {formatFileSize(uploadedFile.size)} - {uploadedFile.type || 'Unknown type'}
                       </p>
                     </div>
                   </div>
@@ -287,14 +311,13 @@ export const MessageInput = () => {
           </div>
         )}
 
-        {/* Message input area */}
         <Card 
           className="shadow-sm border-2 bg-gradient-to-b from-zinc-900 to-zinc-800 text-gray-300 transition-all duration-200 focus-within:border-gray-500 focus-within:shadow-md"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           <CardContent className="p-0">
-            <div className="flex gap-2  p-4">
+            <div className="flex gap-2 p-4">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -320,13 +343,9 @@ export const MessageInput = () => {
                     : <Send className="h-5 text-gray-100 w-5" />
                   }
                 </Button>
-                
-               
-               
               </div>
             </div>
             
-            {/* Input footer */}
             <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-b from-zinc-700 to-zinc-800 border-t text-xs text-muted-foreground">
               <div className="flex items-center gap-4 flex-wrap">
                 <span>{input.length} characters</span>
@@ -350,10 +369,11 @@ export const MessageInput = () => {
           </CardContent>
         </Card>
 
-        {/* Supported file info */}
         <div className="mt-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>Supported: .txt, .csv, .xls, .xlsx (Max 5MB)</span>
-          <span className="flex items-center gap-1"><Upload className="h-3 w-3" /> Drag & drop files here</span>
+          <span className="flex items-center gap-1">
+            <Upload className="h-3 w-3" /> Drag & drop files here
+          </span>
         </div>
       </div>
     </div>
