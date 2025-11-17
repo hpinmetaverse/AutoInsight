@@ -1,7 +1,7 @@
-#  AI Scribe Verse (AutoInsight)
+#  AutoInsight
 
 
-AI Scribe Verse (AutoInsight) is an intuitive, full-stack application designed to empower users with AI-driven conversations. The platform features dual AI models with different sentiment analysis approaches, providing users with flexible, context-aware interactions.
+AutoInsight is an intuitive, full-stack application designed to empower users with AI-driven conversations. The platform features dual AI models with different sentiment analysis approaches, providing users with flexible, context-aware interactions.
 
 ###  What Makes It Special?
 
