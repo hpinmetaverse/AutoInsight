@@ -1,11 +1,11 @@
 #  AutoInsight
 
 
-AutoInsight is an intuitive, full-stack application designed to empower users with ML-driven analysis. The platform features dual ML models with different sentiment analysis approaches, providing users with flexible, context-aware analysis.
+AutoInsight is an intuitive, full-stack application designed to empower users with ML-driven analysis. The platform features dual ML models with different analysis approaches, providing users with flexible, context-aware analysis.
 
 ###  What Makes It Special?
 
-- **Dual ML Models**: Choose between "Non-Num" (standard sentiment analysis) and "Num" (custom phrase-enhanced sentiment analysis)
+- **Dual ML Models**: Choose between "Non-Num" and "Num" dataset options.
 - **Analysis with Summaries**: Diagrams based on key features along with summary of the dataset.
 - **Modern UI/UX**: Built with shadcn/ui components for a polished, professional experience
 - **Secure Authentication**: User authentication and session management via Supabase
