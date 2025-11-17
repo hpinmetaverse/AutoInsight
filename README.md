@@ -1,30 +1,28 @@
 #  AutoInsight
 
 
-AutoInsight is an intuitive, full-stack application designed to empower users with AI-driven conversations. The platform features dual AI models with different sentiment analysis approaches, providing users with flexible, context-aware interactions.
+AutoInsight is an intuitive, full-stack application designed to empower users with ML-driven analysis. The platform features dual ML models with different sentiment analysis approaches, providing users with flexible, context-aware analysis.
 
 ###  What Makes It Special?
 
-- **Dual AI Models**: Choose between "Non-Num" (standard sentiment analysis) and "Num" (custom phrase-enhanced sentiment analysis)
-- **Real-time Chat**: Instant message synchronization with persistent chat history
-- **Sentiment Analysis**: Understand the emotional tone of conversations with ML-powered insights
+- **Dual ML Models**: Choose between "Non-Num" (standard sentiment analysis) and "Num" (custom phrase-enhanced sentiment analysis)
+- **Analysis with Summaries**: Diagrams based on key features along with summary of the dataset.
 - **Modern UI/UX**: Built with shadcn/ui components for a polished, professional experience
 - **Secure Authentication**: User authentication and session management via Supabase
 
 ---
 
 ##  Key Features
-
-###  AI-Powered Conversations
+- Reads a CSV file and performs data analysis
+- Creates visualizations including a correlation matrix and missing values bar plot
 - **Dual Model Support**: Switch between two distinct AI sentiment analysis models
   - **Non-Num Model**: Standard TextBlob-based sentiment analysis
   - **Num Model**: Enhanced with custom phrase recognition for nuanced understanding
-- **Real-time Response**: Fast, responsive AI interactions
-- **Sentiment Scoring**: Get detailed sentiment scores (Positive, Negative, Neutral)
+- **Real-time Response**: Fast responses
+
 
 ###  Chat Management
 - **Persistent Chat History**: All conversations saved to Supabase
-- **Multiple Conversations**: Create and manage multiple chat sessions
 - **Organized Sidebar**: Easy navigation between different chats
 - **Message Timestamps**: Track conversation flow over time
 
@@ -92,8 +90,8 @@ AutoInsight is an intuitive, full-stack application designed to empower users wi
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/AI_Scribe_Verse.git
-cd AI_Scribe_Verse
+git clone https://github.com/hpinmetaverse/AutoInsight.git
+cd AutoInsight
 ```
 
 ### 2. Install Frontend Dependencies
@@ -195,7 +193,7 @@ AI_Scribe_Verse/
 
 
 
-##  Usage
+##  Usage & few future upgradation
 
 1. **Sign Up / Sign In**: Create an account or log in via the Auth page
 2. **Create a Chat**: Start a new conversation from the chat interface
