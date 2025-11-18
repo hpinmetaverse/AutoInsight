@@ -17,18 +17,18 @@
 # ]
 # ///
 
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+import pandas as pd   # pyright: ignore[reportMissingImports]
+import numpy as np   # pyright: ignore[reportMissingImports]
+import seaborn as sns     # pyright: ignore[reportMissingModuleSource]
+import matplotlib.pyplot as plt   # pyright: ignore[reportMissingImports]
 import json
 import base64
 from io import BytesIO
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from transformers import pipeline
-import torch
+from fastapi import FastAPI, UploadFile, File, HTTPException   # pyright: ignore[reportMissingImports]
+from fastapi.responses import HTMLResponse   # pyright: ignore[reportMissingImports]
+from fastapi.middleware.cors import CORSMiddleware   # pyright: ignore[reportMissingImports]
+from transformers import pipeline   # pyright: ignore[reportMissingImports]
+import torch   # pyright: ignore[reportMissingImports]
 
 MAX_PROMPT_CHARS = 1000
 MAX_STATS_COLS = 4
@@ -237,3 +237,5 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
+##  python3 -m uvicorn AutoInsight_categorical:app --reload --port 8002
