@@ -17,18 +17,58 @@
 # ]
 # ///
 
-import pandas as pd# type: ignore
-import numpy as np # type: ignore
-import seaborn as sns # type: ignore
-import matplotlib.pyplot as plt # type: ignore
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 import json
 import base64
 from io import BytesIO
-from fastapi import FastAPI, UploadFile, File, HTTPException # type: ignore
-from fastapi.responses import HTMLResponse # type: ignore
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
-from transformers import pipeline   # type: ignore
-import torch # type: ignore
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from transformers import pipeline
+import torch
+
+MAX_PROMPT_CHARS = 1000
+MAX_STATS_COLS = 4
+MAX_SERIES_ITEMS = 6
+MIN_SUMMARY_WORDS = 100
+MAX_SUMMARY_WORDS = 150
+
+
+def _format_dataframe_for_prompt(df, max_rows=6, max_cols=MAX_STATS_COLS):
+    if df is None or df.empty:
+        return "None"
+    limited = df.copy()
+    if limited.shape[0] > max_rows:
+        limited = limited.iloc[:max_rows]
+    if limited.shape[1] > max_cols:
+        limited = limited.iloc[:, :max_cols]
+    return limited.round(3).to_string()
+
+
+def _format_series_for_prompt(series, max_items=MAX_SERIES_ITEMS):
+    if series is None or series.empty:
+        return "None"
+    limited = series.sort_values(ascending=False).head(max_items)
+    return ", ".join([f"{idx}: {val}" for idx, val in limited.items()])
+
+
+def _truncate_prompt(prompt: str, max_chars: int = MAX_PROMPT_CHARS) -> str:
+    return prompt if len(prompt) <= max_chars else prompt[: max_chars - 3] + "..."
+
+
+def _constrain_summary_length(summary: str, min_words: int = MIN_SUMMARY_WORDS, max_words: int = MAX_SUMMARY_WORDS) -> str:
+    words = summary.split()
+    if not words:
+        return summary
+    if len(words) > max_words:
+        trimmed = " ".join(words[:max_words])
+        return trimmed.rstrip("., ") + "."
+    if len(words) < min_words:
+        return summary.rstrip("., ") + "."
+    return summary.rstrip("., ") + "."
 
 app = FastAPI()
 
@@ -51,6 +91,8 @@ def detect_numerical(df):
 # Function to analyze numerical data
 def analyze_numerical(df, numerical):
     analysis = {}
+    summary_stats = pd.DataFrame()
+    corr_matrix = pd.DataFrame()
     if numerical:
         summary_stats = df[numerical].describe()
         analysis['summary_stats'] = summary_stats.to_html()
@@ -115,43 +157,27 @@ def visualize_numerical(df, corr_matrix, outliers, numerical):
 
 # Function to generate summary using GPT-2
 def generate_summary(df, summary_stats, missing_values, corr_matrix, outliers, numerical):
+    prompt_parts = [
+        f"Explain this numerical dataset in simple terms: {len(df)} rows and {len(numerical)} numerical columns.",
+        f"Key columns: {', '.join(numerical[:MAX_SERIES_ITEMS])}.",
+        f"Summary stats sample: {_format_dataframe_for_prompt(summary_stats)}.",
+        f"Missing values (top): {_format_series_for_prompt(missing_values)}.",
+    ]
+    if not corr_matrix.empty:
+        prompt_parts.append(f"Correlation sample: {_format_dataframe_for_prompt(corr_matrix)}.")
+    total_outliers = int(sum(outliers.values())) if outliers else 0
+    prompt_parts.append(f"Total outliers detected: {total_outliers}.")
+    prompt_parts.append("Write a 110-140 word explanation that highlights ranges, central tendencies, volatility, correlations, missingness, outliers, and any plausible target variable for a non-technical audience.")
+    prompt = _truncate_prompt(" ".join(prompt_parts))
 
-    # Safely keep only existing columns
-    wanted = ['mean', 'std', 'min', 'max']
-    available_cols = [c for c in wanted if c in summary_stats.columns]
-
-    compact_stats = summary_stats[available_cols].to_string() if available_cols else "No numeric stats available"
-
-    prompt = f"""
-Summarize this dataset:
-
-Rows: {len(df)}
-Numerical Columns: {numerical}
-
-Stats (available only):
-{compact_stats}
-
-Missing Values:
-{missing_values.to_dict()}
-
-Outliers detected: {sum(outliers.values()) if outliers else 0}
-
-Generate a simple human-friendly explanation.
-"""
-
-    generator = pipeline(
-        'text-generation',
-        model='gpt2',
-        device=-1
-    )
-
-    generated = generator(prompt, max_new_tokens=150, truncation=True)
+    generator = pipeline('text-generation', model='gpt2', device=-1)
+    generated = generator(prompt, max_new_tokens=256, num_return_sequences=1, truncation=True)
     summary = generated[0]['generated_text']
+    if summary.startswith(prompt):
+        summary = summary[len(prompt):].strip()
+    return _constrain_summary_length(summary)
 
-    return summary[len(prompt):].strip()
-
-
-@app.post("/analyzes")
+@app.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
     if not file.filename.endswith(('.csv', '.xlsx')):
         raise HTTPException(status_code=400, detail="File must be CSV or XLSX")
@@ -211,6 +237,3 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
-
-
-##  python3 -m uvicorn AutoInsight_numerical:app --reload --port 8001
