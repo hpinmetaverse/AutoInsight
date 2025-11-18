@@ -17,18 +17,63 @@
 # ]
 # ///
 
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import seaborn as sns   # type: ignore
-import matplotlib.pyplot as plt # type: ignore
-import json # type: ignore
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import json
 import base64
 from io import BytesIO
-from fastapi import FastAPI, UploadFile, File, HTTPException # type: ignore
-from fastapi.responses import HTMLResponse # type: ignore
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
-from transformers import pipeline # type: ignore
-import torch # type: ignore
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from transformers import pipeline
+import torch
+
+MAX_PROMPT_CHARS = 1000
+MAX_SERIES_ITEMS = 6
+MAX_CATEGORIES_PREVIEW = 4
+MIN_SUMMARY_WORDS = 100
+MAX_SUMMARY_WORDS = 150
+
+
+def _format_value_counts_for_prompt(analysis, max_columns=3, max_entries=MAX_CATEGORIES_PREVIEW):
+    preview = []
+    for idx, (col, counts) in enumerate(analysis.items()):
+        if col == 'missing_values':
+            continue
+        if idx >= max_columns:
+            break
+        top_counts = list(counts.items())[:max_entries]
+        formatted_counts = ", ".join([f"{cat}: {cnt}" for cat, cnt in top_counts])
+        preview.append(f"{col} -> {formatted_counts}")
+    return preview or ["Counts not available"]
+
+
+def _format_missing_for_prompt(missing_values):
+    if not missing_values:
+        return "None"
+    series = pd.Series(missing_values)
+    if series.empty:
+        return "None"
+    limited = series.sort_values(ascending=False).head(MAX_SERIES_ITEMS)
+    return ", ".join([f"{idx}: {val}" for idx, val in limited.items()])
+
+
+def _truncate_prompt(prompt: str, max_chars: int = MAX_PROMPT_CHARS) -> str:
+    return prompt if len(prompt) <= max_chars else prompt[: max_chars - 3] + "..."
+
+
+def _constrain_summary_length(summary: str, min_words: int = MIN_SUMMARY_WORDS, max_words: int = MAX_SUMMARY_WORDS) -> str:
+    words = summary.split()
+    if not words:
+        return summary
+    if len(words) > max_words:
+        trimmed = " ".join(words[:max_words])
+        return trimmed.rstrip("., ") + "."
+    if len(words) < min_words:
+        return summary.rstrip("., ") + "."
+    return summary.rstrip("., ") + "."
 
 app = FastAPI()
 
@@ -80,13 +125,23 @@ def visualize_categorical(df, categorical):
 
 # Function to generate summary using GPT-2
 def generate_summary(df, analysis, categorical):
-    prompt = f"Explain this categorical dataset in simple terms: {len(df)} rows, {len(categorical)} categorical columns: {categorical}. Value counts: {json.dumps(analysis)}. Missing: {sum(analysis['missing_values'].values())}. Describe key insights."
+    value_count_preview = _format_value_counts_for_prompt(analysis)
+    missing_overview = _format_missing_for_prompt(analysis.get('missing_values', {}))
+    prompt_parts = [
+        f"Explain this categorical dataset in simple terms: {len(df)} rows and {len(categorical)} categorical columns.",
+        f"Columns sampled: {', '.join(categorical[:MAX_SERIES_ITEMS])}.",
+        f"Sample value counts: {' | '.join(value_count_preview)}.",
+        f"Missing values overview: {missing_overview}.",
+        "Write a 110-140 word narrative that highlights dominant categories, diversity, missingness, distribution skews, and any candidate target columns in accessible language."
+    ]
+    prompt = _truncate_prompt(" ".join(prompt_parts))
+
     generator = pipeline('text-generation', model='gpt2', device=-1)
     generated = generator(prompt, max_new_tokens=256, num_return_sequences=1, truncation=True)
     summary = generated[0]['generated_text']
     if summary.startswith(prompt):
         summary = summary[len(prompt):].strip()
-    return summary
+    return _constrain_summary_length(summary)
 
 @app.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
@@ -143,8 +198,5 @@ async def root():
     """
 
 if __name__ == "__main__":
-    import uvicorn 
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)
-
-
-##  python3 -m uvicorn AutoInsight_categorical:app --reload --port 8002
