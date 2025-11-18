@@ -177,7 +177,7 @@ def generate_summary(df, summary_stats, missing_values, corr_matrix, outliers, n
         summary = summary[len(prompt):].strip()
     return _constrain_summary_length(summary)
 
-@app.post("/analyze")
+@app.post("/analyzes")
 async def analyze_file(file: UploadFile = File(...)):
     if not file.filename.endswith(('.csv', '.xlsx')):
         raise HTTPException(status_code=400, detail="File must be CSV or XLSX")
@@ -238,4 +238,5 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
 
-##  python3 -m uvicorn AutoInsight_categorical:app --reload --port 8002
+
+##  python3 -m uvicorn AutoInsight_numerical:app --reload --port 8001
