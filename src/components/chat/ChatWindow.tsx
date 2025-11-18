@@ -106,7 +106,7 @@ export const ChatWindow = () => {
       <div className="mx-auto max-w-4xl space-y-6 p-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <h3 className="text-3xl font-semibold mb-2">How Can I help you?</h3>
+            <h3 className="text-3xl font-semibold mb-2">How can I help you?</h3>
         
           </div>
         ) : (
